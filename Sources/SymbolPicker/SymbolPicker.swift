@@ -14,7 +14,7 @@ import SwiftUI
     import AppKit
     internal typealias PlatformColor = NSColor
 #else
-//    fatalError("platform not supported")
+    // TODO: other platform support
 #endif
 
 public struct SymbolPicker: View {
@@ -191,7 +191,6 @@ public struct SymbolPicker: View {
                 .toolbar {
                     ToolbarItem(placement: .navigationBarLeading) {
                         Button(LocalizedString("cancel")) {
-                            symbol = ""
                             presentationMode.wrappedValue.dismiss()
                         }
                     }

@@ -13,7 +13,7 @@ SymbolPicker provides a simple interface for picking a SFSymbol with search func
 
 ### Requirements
 
-* iOS 14.0+
+* iOS 14.0+ / macOS 12.0+
 * Xcode 13.0+
 * Swift 5.0+
 
@@ -23,7 +23,7 @@ SymbolPicker is available as a Swift Package. Add this repo to your project thro
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/xnth97/SymbolPicker.git", .upToNextMajor(from: "1.0.0"))
+    .package(url: "https://github.com/xnth97/SymbolPicker.git", .upToNextMajor(from: "1.1.0"))
 ]
 ```
 
@@ -40,7 +40,7 @@ struct ContentView: View {
     var body: some View {
         Button(action: {
             iconPickerPresented = true
-         }) {
+        }) {
             HStack {
                 Image(systemName: icon)
                 Text(icon)
