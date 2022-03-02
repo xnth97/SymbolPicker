@@ -8,14 +8,15 @@ let package = Package(
     defaultLocalization: "en",
     platforms: [
         .iOS(.v14),
+        .macOS(.v12),
     ],
     products: [
         .library(
             name: "SymbolPicker",
-            targets: ["SymbolPicker"]),
+            targets: ["SymbolPicker"]
+        ),
     ],
     dependencies: [
-
     ],
     targets: [
         .target(
@@ -24,9 +25,7 @@ let package = Package(
             path: "Sources/SymbolPicker",
             resources: [
                 .process("Resources"),
-            ]),
-        .testTarget(
-            name: "SymbolPickerTests",
-            dependencies: ["SymbolPicker"]),
+            ]
+        ),
     ]
 )
