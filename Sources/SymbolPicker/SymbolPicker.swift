@@ -18,6 +18,7 @@ import SwiftUI
 #endif
 
 public struct SymbolPicker: View {
+
     // MARK: - Static consts
 
     private static let symbols: [String] = {
@@ -32,8 +33,10 @@ public struct SymbolPicker: View {
     }()
 
     private static var gridDimension: CGFloat {
-        #if os(iOS) || os(tvOS)
+        #if os(iOS)
             return 64
+        #elseif os(tvOS)
+            return 128
         #elseif os(macOS)
             return 30
         #else
@@ -42,8 +45,10 @@ public struct SymbolPicker: View {
     }
 
     private static var symbolSize: CGFloat {
-        #if os(iOS) || os(tvOS)
+        #if os(iOS)
             return 24
+        #elseif os(tvOS)
+            return 48
         #elseif os(macOS)
             return 14
         #else
@@ -52,8 +57,10 @@ public struct SymbolPicker: View {
     }
 
     private static var symbolCornerRadius: CGFloat {
-        #if os(iOS) || os(tvOS)
+        #if os(iOS)
             return 8
+        #elseif os(tvOS)
+            return 12
         #elseif os(macOS)
             return 4
         #else
@@ -77,7 +84,7 @@ public struct SymbolPicker: View {
 
     @ViewBuilder
     private var searchableSymbolGrid: some View {
-        #if os(iOS) || os(tvOS)
+        #if os(iOS)
             if #available(iOS 15.0, *) {
                 symbolGrid
                     .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
@@ -95,6 +102,9 @@ public struct SymbolPicker: View {
                         .padding()
                 }
             }
+        #elseif os(tvOS)
+            symbolGrid
+                .searchable(text: $searchText, placement: .automatic)
         #elseif os(macOS)
             VStack(spacing: 10) {
                 TextField(LocalizedString("search_placeholder"), text: $searchText)
@@ -107,13 +117,16 @@ public struct SymbolPicker: View {
     }
 
     internal func dynamicColor(light: PlatformColor, dark: PlatformColor) -> Color {
-        #if os(iOS) || os(tvOS)
+        #if os(iOS)
             let color = PlatformColor { $0.userInterfaceStyle == .dark ? dark : light }
             if #available(iOS 15.0, *) {
                 return Color(uiColor: color)
             } else {
                 return Color(color)
             }
+        #elseif os(tvOS)
+            let color = PlatformColor { $0.userInterfaceStyle == .dark ? dark : light }
+            return Color(uiColor: color)
         #elseif os(macOS)
             let color = PlatformColor(name: nil) { $0.name == .darkAqua ? dark : light }
             if #available(macOS 12.0, *) {
@@ -162,7 +175,11 @@ public struct SymbolPicker: View {
                             Image(systemName: thisSymbol)
                                 .font(.system(size: Self.symbolSize))
                                 .frame(maxWidth: .infinity, minHeight: Self.gridDimension)
+                            #if !os(tvOS)
                                 .background(Color.accentColor)
+                            #else
+                                .background(Color.gray.opacity(0.3))
+                            #endif
                                 .cornerRadius(Self.symbolCornerRadius)
                                 .foregroundColor(.white)
                         } else {
@@ -187,7 +204,9 @@ public struct SymbolPicker: View {
                     secondarySystemBackground.edgesIgnoringSafeArea(.all)
                     searchableSymbolGrid
                 }
+                #if os(iOS)
                 .navigationBarTitleDisplayMode(.inline)
+                #endif
                 .toolbar {
                     ToolbarItem(placement: .navigationBarLeading) {
                         Button(LocalizedString("cancel")) {
