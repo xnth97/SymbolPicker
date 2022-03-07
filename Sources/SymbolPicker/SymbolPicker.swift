@@ -7,14 +7,12 @@
 
 import SwiftUI
 
-#if os(iOS) || os(tvOS)
-    import UIKit
-    internal typealias PlatformColor = UIColor
-#elseif os(macOS)
-    import AppKit
-    internal typealias PlatformColor = NSColor
+#if os(macOS)
+import AppKit
+typealias PlatformColor = NSColor
 #else
-    // TODO: other platform support
+import UIKit
+typealias PlatformColor = UIColor
 #endif
 
 public struct SymbolPicker: View {
@@ -40,7 +38,7 @@ public struct SymbolPicker: View {
         #elseif os(macOS)
             return 30
         #else
-            fatalError("platform not supported")
+            return 48
         #endif
     }
 
@@ -52,7 +50,7 @@ public struct SymbolPicker: View {
         #elseif os(macOS)
             return 14
         #else
-            fatalError("platform not supported")
+            return 24
         #endif
     }
 
@@ -64,8 +62,29 @@ public struct SymbolPicker: View {
         #elseif os(macOS)
             return 4
         #else
-            fatalError("platform not supported")
+            return 8
         #endif
+    }
+
+    private static var systemGray5: Color {
+        dynamicColor(
+            light: .init(red: 0.9, green: 0.9, blue: 0.92, alpha: 1.0),
+            dark: .init(red: 0.17, green: 0.17, blue: 0.18, alpha: 1.0)
+        )
+    }
+
+    private static var systemBackground: Color {
+        dynamicColor(
+            light: .init(red: 1, green: 1, blue: 1, alpha: 1.0),
+            dark: .init(red: 0, green: 0, blue: 0, alpha: 1.0)
+        )
+    }
+
+    private static var secondarySystemBackground: Color {
+        dynamicColor(
+            light: .init(red: 0.95, green: 0.95, blue: 1, alpha: 1.0),
+            dark: .init(red: 0, green: 0, blue: 0, alpha: 1.0)
+        )
     }
 
     // MARK: - Properties
@@ -93,7 +112,7 @@ public struct SymbolPicker: View {
                     TextField(LocalizedString("search_placeholder"), text: $searchText)
                         .padding(8)
                         .padding(.horizontal, 8)
-                        .background(systemGray5)
+                        .background(Self.systemGray5)
                         .cornerRadius(8.0)
                         .padding(.horizontal, 16.0)
                         .autocapitalization(.none)
@@ -112,52 +131,9 @@ public struct SymbolPicker: View {
                 symbolGrid
             }
         #else
-            fatalError("platform not supported")
+        symbolGrid
+            .searchable(text: $searchText, placement: .automatic)
         #endif
-    }
-
-    internal func dynamicColor(light: PlatformColor, dark: PlatformColor) -> Color {
-        #if os(iOS)
-            let color = PlatformColor { $0.userInterfaceStyle == .dark ? dark : light }
-            if #available(iOS 15.0, *) {
-                return Color(uiColor: color)
-            } else {
-                return Color(color)
-            }
-        #elseif os(tvOS)
-            let color = PlatformColor { $0.userInterfaceStyle == .dark ? dark : light }
-            return Color(uiColor: color)
-        #elseif os(macOS)
-            let color = PlatformColor(name: nil) { $0.name == .darkAqua ? dark : light }
-            if #available(macOS 12.0, *) {
-                return Color(nsColor: color)
-            } else {
-                return Color(color)
-            }
-        #else
-            fatalError("platform not supported")
-        #endif
-    }
-
-    var systemGray5: Color {
-        dynamicColor(
-            light: .init(red: 0.9, green: 0.9, blue: 0.92, alpha: 1.0),
-            dark: .init(red: 0.17, green: 0.17, blue: 0.18, alpha: 1.0)
-        )
-    }
-
-    var systemBackground: Color {
-        dynamicColor(
-            light: .init(red: 1, green: 1, blue: 1, alpha: 1.0),
-            dark: .init(red: 0, green: 0, blue: 0, alpha: 1.0)
-        )
-    }
-
-    var secondarySystemBackground: Color {
-        dynamicColor(
-            light: .init(red: 0.95, green: 0.95, blue: 1, alpha: 1.0),
-            dark: .init(red: 0, green: 0, blue: 0, alpha: 1.0)
-        )
     }
 
     private var symbolGrid: some View {
@@ -166,10 +142,11 @@ public struct SymbolPicker: View {
                 ForEach(Self.symbols.filter { searchText.isEmpty ? true : $0.localizedCaseInsensitiveContains(searchText) }, id: \.self) { thisSymbol in
                     Button(action: {
                         symbol = thisSymbol
-                        #if os(iOS) || os(tvOS)
-                            presentationMode.wrappedValue.dismiss()
+
+                        // Dismiss sheet. macOS will have done button
+                        #if !os(macOS)
+                        presentationMode.wrappedValue.dismiss()
                         #endif
-                        // macOS will have done button
                     }) {
                         if thisSymbol == symbol {
                             Image(systemName: thisSymbol)
@@ -186,7 +163,7 @@ public struct SymbolPicker: View {
                             Image(systemName: thisSymbol)
                                 .font(.system(size: Self.symbolSize))
                                 .frame(maxWidth: .infinity, minHeight: Self.gridDimension)
-                                .background(systemBackground)
+                                .background(Self.systemBackground)
                                 .cornerRadius(Self.symbolCornerRadius)
                                 .foregroundColor(.primary)
                         }
@@ -198,17 +175,17 @@ public struct SymbolPicker: View {
     }
 
     public var body: some View {
-        #if os(iOS) || os(tvOS)
+        #if !os(macOS)
             NavigationView {
                 ZStack {
-                    secondarySystemBackground.edgesIgnoringSafeArea(.all)
+                    Self.secondarySystemBackground.edgesIgnoringSafeArea(.all)
                     searchableSymbolGrid
                 }
                 #if os(iOS)
                 .navigationBarTitleDisplayMode(.inline)
                 #endif
                 .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
+                    ToolbarItem(placement: .cancellationAction) {
                         Button(LocalizedString("cancel")) {
                             presentationMode.wrappedValue.dismiss()
                         }
@@ -244,6 +221,32 @@ public struct SymbolPicker: View {
             .frame(width: 520, height: 300, alignment: .center)
         #endif
     }
+
+    // MARK: - Private helpers
+
+    private static func dynamicColor(light: PlatformColor, dark: PlatformColor) -> Color {
+        #if os(iOS)
+            let color = PlatformColor { $0.userInterfaceStyle == .dark ? dark : light }
+            if #available(iOS 15.0, *) {
+                return Color(uiColor: color)
+            } else {
+                return Color(color)
+            }
+        #elseif os(tvOS)
+            let color = PlatformColor { $0.userInterfaceStyle == .dark ? dark : light }
+            return Color(uiColor: color)
+        #elseif os(macOS)
+            let color = PlatformColor(name: nil) { $0.name == .darkAqua ? dark : light }
+            if #available(macOS 12.0, *) {
+                return Color(nsColor: color)
+            } else {
+                return Color(color)
+            }
+        #else
+            return Color(uiColor: dark)
+        #endif
+    }
+
 }
 
 private func LocalizedString(_ key: String) -> String {
