@@ -19,16 +19,9 @@ public struct SymbolPicker: View {
 
     // MARK: - Static consts
 
-    private static let symbols: [String] = {
-        guard let path = Bundle.module.path(forResource: "sfsymbols", ofType: "txt"),
-              let content = try? String(contentsOfFile: path)
-        else {
-            return []
-        }
-        return content
-            .split(separator: "\n")
-            .map { String($0) }
-    }()
+    private static var symbols: [String] {
+        Symbols.shared.allSymbols
+    }
 
     private static var gridDimension: CGFloat {
         #if os(iOS)
