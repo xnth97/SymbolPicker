@@ -7,14 +7,7 @@
 
 import SwiftUI
 
-#if os(macOS)
-import AppKit
-typealias PlatformColor = NSColor
-#else
-import UIKit
-typealias PlatformColor = UIColor
-#endif
-
+/// A simple and cross-platform SFSymbol picker for SwiftUI.
 public struct SymbolPicker: View {
 
     // MARK: - Static consts
@@ -25,59 +18,62 @@ public struct SymbolPicker: View {
 
     private static var gridDimension: CGFloat {
         #if os(iOS)
-            return 64
+        return 64
         #elseif os(tvOS)
-            return 128
+        return 128
         #elseif os(macOS)
-            return 30
+        return 48
         #else
-            return 48
+        return 48
         #endif
     }
 
     private static var symbolSize: CGFloat {
         #if os(iOS)
-            return 24
+        return 24
         #elseif os(tvOS)
-            return 48
+        return 48
         #elseif os(macOS)
-            return 14
+        return 24
         #else
-            return 24
+        return 24
         #endif
     }
 
     private static var symbolCornerRadius: CGFloat {
         #if os(iOS)
-            return 8
+        return 8
         #elseif os(tvOS)
-            return 12
+        return 12
         #elseif os(macOS)
-            return 4
+        return 8
         #else
-            return 8
+        return 8
         #endif
     }
 
-    private static var systemGray5: Color {
-        dynamicColor(
-            light: .init(red: 0.9, green: 0.9, blue: 0.92, alpha: 1.0),
-            dark: .init(red: 0.17, green: 0.17, blue: 0.18, alpha: 1.0)
-        )
+    private static var unselectedItemBackgroundColor: Color {
+        #if os(iOS)
+        return Color(UIColor.systemBackground)
+        #else
+        return .clear
+        #endif
     }
 
-    private static var systemBackground: Color {
-        dynamicColor(
-            light: .init(red: 1, green: 1, blue: 1, alpha: 1.0),
-            dark: .init(red: 0, green: 0, blue: 0, alpha: 1.0)
-        )
+    private static var selectedItemBackgroundColor: Color {
+        #if os(tvOS)
+        return Color.gray.opacity(0.3)
+        #else
+        return Color.accentColor
+        #endif
     }
 
-    private static var secondarySystemBackground: Color {
-        dynamicColor(
-            light: .init(red: 0.95, green: 0.95, blue: 1, alpha: 1.0),
-            dark: .init(red: 0, green: 0, blue: 0, alpha: 1.0)
-        )
+    private static var backgroundColor: Color {
+        #if os(iOS)
+        return Color(UIColor.systemGroupedBackground)
+        #else
+        return .clear
+        #endif
     }
 
     // MARK: - Properties
@@ -88,6 +84,9 @@ public struct SymbolPicker: View {
 
     // MARK: - Public Init
 
+    /// Initializes `SymbolPicker` with a string binding that captures the raw value of
+    /// user-selected SFSymbol.
+    /// - Parameter symbol: String binding to store user selection.
     public init(symbol: Binding<String>) {
         _symbol = symbol
     }
@@ -97,32 +96,59 @@ public struct SymbolPicker: View {
     @ViewBuilder
     private var searchableSymbolGrid: some View {
         #if os(iOS)
-            if #available(iOS 15.0, *) {
-                symbolGrid
-                    .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
-            } else {
-                VStack {
-                    TextField(LocalizedString("search_placeholder"), text: $searchText)
-                        .padding(8)
-                        .padding(.horizontal, 8)
-                        .background(Self.systemGray5)
-                        .cornerRadius(8.0)
-                        .padding(.horizontal, 16.0)
-                        .autocapitalization(.none)
-                        .disableAutocorrection(true)
-                    symbolGrid
-                        .padding()
-                }
-            }
-        #elseif os(tvOS)
+        if #available(iOS 15.0, *) {
             symbolGrid
-                .searchable(text: $searchText, placement: .automatic)
-        #elseif os(macOS)
-            VStack(spacing: 10) {
+                .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
+        } else {
+            VStack {
                 TextField(LocalizedString("search_placeholder"), text: $searchText)
+                    .padding(8)
+                    .padding(.horizontal, 8)
+                    .background(Color(UIColor.systemGray5))
+                    .cornerRadius(8.0)
+                    .padding(.horizontal, 16.0)
+                    .autocapitalization(.none)
                     .disableAutocorrection(true)
                 symbolGrid
+                    .padding()
             }
+        }
+        #elseif os(tvOS)
+        VStack {
+            TextField(LocalizedString("search_placeholder"), text: $searchText)
+                .padding(.horizontal, 8)
+                .autocapitalization(.none)
+                .disableAutocorrection(true)
+            symbolGrid
+        }
+
+        /// `searchable` is crashing on tvOS 16. What the hell aPPLE?
+        ///
+        /// symbolGrid
+        ///     .searchable(text: $searchText, placement: .automatic)
+        #elseif os(macOS)
+        VStack(spacing: 0) {
+            HStack {
+                TextField(LocalizedString("search_placeholder"), text: $searchText)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 18.0))
+                    .disableAutocorrection(true)
+
+                Button {
+                    presentationMode.wrappedValue.dismiss()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .resizable()
+                        .frame(width: 16.0, height: 16.0)
+                }
+                .buttonStyle(.borderless)
+            }
+            .padding()
+
+            Divider()
+
+            symbolGrid
+        }
         #else
         symbolGrid
             .searchable(text: $searchText, placement: .automatic)
@@ -133,35 +159,34 @@ public struct SymbolPicker: View {
         ScrollView {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: Self.gridDimension, maximum: Self.gridDimension))]) {
                 ForEach(Self.symbols.filter { searchText.isEmpty ? true : $0.localizedCaseInsensitiveContains(searchText) }, id: \.self) { thisSymbol in
-                    Button(action: {
+                    Button {
                         symbol = thisSymbol
-
-                        // Dismiss sheet. macOS will have done button
-                        #if !os(macOS)
                         presentationMode.wrappedValue.dismiss()
-                        #endif
-                    }) {
+                    } label: {
                         if thisSymbol == symbol {
                             Image(systemName: thisSymbol)
                                 .font(.system(size: Self.symbolSize))
+                                #if os(tvOS)
+                                .frame(minWidth: Self.gridDimension, minHeight: Self.gridDimension)
+                                #else
                                 .frame(maxWidth: .infinity, minHeight: Self.gridDimension)
-                            #if !os(tvOS)
-                                .background(Color.accentColor)
-                            #else
-                                .background(Color.gray.opacity(0.3))
-                            #endif
+                                #endif
+                                .background(Self.selectedItemBackgroundColor)
                                 .cornerRadius(Self.symbolCornerRadius)
                                 .foregroundColor(.white)
                         } else {
                             Image(systemName: thisSymbol)
                                 .font(.system(size: Self.symbolSize))
                                 .frame(maxWidth: .infinity, minHeight: Self.gridDimension)
-                                .background(Self.systemBackground)
+                                .background(Self.unselectedItemBackgroundColor)
                                 .cornerRadius(Self.symbolCornerRadius)
                                 .foregroundColor(.primary)
                         }
                     }
-                    .buttonStyle(PlainButtonStyle())
+                    .buttonStyle(.plain)
+                    #if os(iOS)
+                    .hoverEffect(.lift)
+                    #endif
                 }
             }
         }
@@ -169,74 +194,32 @@ public struct SymbolPicker: View {
 
     public var body: some View {
         #if !os(macOS)
-            NavigationView {
-                ZStack {
-                    Self.secondarySystemBackground.edgesIgnoringSafeArea(.all)
-                    searchableSymbolGrid
-                }
+        NavigationView {
+            ZStack {
                 #if os(iOS)
-                .navigationBarTitleDisplayMode(.inline)
+                Self.backgroundColor.edgesIgnoringSafeArea(.all)
                 #endif
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button(LocalizedString("cancel")) {
-                            presentationMode.wrappedValue.dismiss()
-                        }
-                    }
-                }
-            }
-            .navigationViewStyle(StackNavigationViewStyle())
-        #else
-            VStack(alignment: .leading, spacing: 10) {
-                Text(LocalizedString("sf_symbol_picker"))
-                    .font(.headline)
-                Divider()
                 searchableSymbolGrid
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                Divider()
-                HStack {
-                    Button {
-                        symbol = ""
+            }
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            #if !os(tvOS)
+            /// tvOS can use back button on remote
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(LocalizedString("cancel")) {
                         presentationMode.wrappedValue.dismiss()
-                    } label: {
-                        Text(LocalizedString("cancel"))
-                    }
-                    .keyboardShortcut(.cancelAction)
-                    Spacer()
-                    Button {
-                        presentationMode.wrappedValue.dismiss()
-                    } label: {
-                        Text(LocalizedString("done"))
                     }
                 }
             }
-            .padding()
-            .frame(width: 520, height: 300, alignment: .center)
-        #endif
-    }
-
-    // MARK: - Private helpers
-
-    private static func dynamicColor(light: PlatformColor, dark: PlatformColor) -> Color {
-        #if os(iOS)
-            let color = PlatformColor { $0.userInterfaceStyle == .dark ? dark : light }
-            if #available(iOS 15.0, *) {
-                return Color(uiColor: color)
-            } else {
-                return Color(color)
-            }
-        #elseif os(tvOS)
-            let color = PlatformColor { $0.userInterfaceStyle == .dark ? dark : light }
-            return Color(uiColor: color)
-        #elseif os(macOS)
-            let color = PlatformColor(name: nil) { $0.name == .darkAqua ? dark : light }
-            if #available(macOS 12.0, *) {
-                return Color(nsColor: color)
-            } else {
-                return Color(color)
-            }
+            #endif
+        }
+        .navigationViewStyle(.stack)
         #else
-            return Color(uiColor: dark)
+        searchableSymbolGrid
+            .frame(width: 540, height: 320, alignment: .center)
+            .background(.regularMaterial)
         #endif
     }
 

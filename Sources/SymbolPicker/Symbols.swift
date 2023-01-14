@@ -1,12 +1,13 @@
 //
 //  Symbols.swift
-//  
+//  SymbolPicker
 //
 //  Created by Yubo Qin on 1/12/23.
 //
 
 import Foundation
 
+/// Simple singleton class for providing symbols list per platform availability.
 class Symbols {
 
     static let shared = Symbols()
