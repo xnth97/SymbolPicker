@@ -110,7 +110,7 @@ public struct SymbolPicker: View {
                     .autocapitalization(.none)
                     .disableAutocorrection(true)
                 symbolGrid
-                    .padding()
+                    .padding(.top)
             }
         }
         #elseif os(tvOS)
@@ -189,6 +189,7 @@ public struct SymbolPicker: View {
                     #endif
                 }
             }
+            .padding(.horizontal)
         }
     }
 
