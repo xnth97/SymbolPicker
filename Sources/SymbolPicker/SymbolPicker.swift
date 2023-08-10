@@ -178,7 +178,7 @@ public struct SymbolPicker: View {
                     } label: {
                         if symbol == nil {
                             Text("None")
-                                .font(.system(size: Self.symbolSize))
+                                .font(.headline)
 #if os(tvOS)
                                 .frame(minWidth: Self.gridDimension, minHeight: Self.gridDimension)
 #else
@@ -189,7 +189,7 @@ public struct SymbolPicker: View {
                                 .foregroundColor(.white)
                         } else {
                             Text("None")
-                                .font(.system(size: Self.symbolSize))
+                                .font(.headline)
                                 .frame(maxWidth: .infinity, minHeight: Self.gridDimension)
                                 .background(Self.unselectedItemBackgroundColor)
                                 .cornerRadius(Self.symbolCornerRadius)
