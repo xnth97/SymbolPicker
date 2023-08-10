@@ -77,8 +77,9 @@ public struct SymbolPicker: View {
     }
 
     // MARK: - Properties
-
-    @Binding public var symbol: String
+    
+    @Binding public var symbol: String?
+    private let canBeNone: Bool
     @State private var searchText = ""
     @Environment(\.presentationMode) private var presentationMode
 
@@ -88,7 +89,18 @@ public struct SymbolPicker: View {
     /// user-selected SFSymbol.
     /// - Parameter symbol: String binding to store user selection.
     public init(symbol: Binding<String>) {
+        _symbol = Binding(get: {
+            return symbol.wrappedValue
+        }, set: { newValue in
+            /// As the `canBeNone` is set to `false`, this can not be `nil`
+            symbol.wrappedValue = newValue!
+        })
+        canBeNone = false
+    }
+    
+    public init(symbol: Binding<String?>) {
         _symbol = symbol
+        canBeNone = true
     }
 
     // MARK: - View Components
@@ -158,6 +170,38 @@ public struct SymbolPicker: View {
     private var symbolGrid: some View {
         ScrollView {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: Self.gridDimension, maximum: Self.gridDimension))]) {
+                // The `None` option
+                if canBeNone {
+                    Button {
+                        symbol = nil
+                        presentationMode.wrappedValue.dismiss()
+                    } label: {
+                        if symbol == nil {
+                            Text("None")
+                                .font(.system(size: Self.symbolSize))
+#if os(tvOS)
+                                .frame(minWidth: Self.gridDimension, minHeight: Self.gridDimension)
+#else
+                                .frame(maxWidth: .infinity, minHeight: Self.gridDimension)
+#endif
+                                .background(Self.selectedItemBackgroundColor)
+                                .cornerRadius(Self.symbolCornerRadius)
+                                .foregroundColor(.white)
+                        } else {
+                            Text("None")
+                                .font(.system(size: Self.symbolSize))
+                                .frame(maxWidth: .infinity, minHeight: Self.gridDimension)
+                                .background(Self.unselectedItemBackgroundColor)
+                                .cornerRadius(Self.symbolCornerRadius)
+                                .foregroundColor(.primary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    #if os(iOS)
+                    .hoverEffect(.lift)
+                    #endif
+                }
+                // The actual symbols
                 ForEach(Self.symbols.filter { searchText.isEmpty ? true : $0.localizedCaseInsensitiveContains(searchText) }, id: \.self) { thisSymbol in
                     Button {
                         symbol = thisSymbol
