@@ -7,7 +7,7 @@ A simple and cross-platform SFSymbol picker for SwiftUI
 
 ## Features
 
-SymbolPicker provides a simple and cross-platform interface for picking a SFSymbol with search functionality that is backported to iOS and tvOS 14. SymbolPicker is implemented with SwiftUI and supports iOS, macOS, tvOS, watchOS and visionOS platforms.
+SymbolPicker provides a simple and cross-platform interface for picking a SFSymbol. SymbolPicker is implemented with SwiftUI and supports iOS, macOS, tvOS, watchOS and visionOS platforms.
 
 ![](/Screenshots/demo.png)
 
@@ -21,7 +21,7 @@ Please use [xrOS branch](https://github.com/xnth97/SymbolPicker/tree/xrOS) for v
 
 ### Requirements
 
-* iOS 14.0+ / macOS 12.0+ / tvOS 14.0+ / watchOS 8.0+ / visionOS 1.0+
+* iOS 15.0+ / macOS 12.0+ / tvOS 15.0+ / watchOS 8.0+ / visionOS 1.0+
 * Xcode 13.0+
 * Swift 5.0+
 
@@ -68,8 +68,8 @@ struct ContentView: View {
 - [ ] Categories support
 - [x] Multiplatform support
 - [x] Platform availability support
-- [ ] Inline UI
 - [ ] Codegen from latest SF Symbols
+- [x] Nullable symbol
 
 ## License
 

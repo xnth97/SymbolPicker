@@ -79,9 +79,10 @@ public struct SymbolPicker: View {
     // MARK: - Properties
     
     @Binding public var symbol: String?
-    private let canBeNone: Bool
     @State private var searchText = ""
-    @Environment(\.presentationMode) private var presentationMode
+    @Environment(\.dismiss) private var dismiss
+
+    private let nullable: Bool
 
     // MARK: - Public Init
 
@@ -89,20 +90,23 @@ public struct SymbolPicker: View {
     /// user-selected SFSymbol.
     /// - Parameter symbol: String binding to store user selection.
     public init(symbol: Binding<String>) {
-        _symbol = Binding(get: {
+        _symbol = Binding {
             return symbol.wrappedValue
-        }, set: { newValue in
-            /// As the `canBeNone` is set to `false`, this can not be `nil`
+        } set: { newValue in
+            /// As the `nullable` is set to `false`, this can not be `nil`
             if let newValue {
                 symbol.wrappedValue = newValue
             }
-        })
-        canBeNone = false
+        }
+        nullable = false
     }
-    
+
+    /// Initializes `SymbolPicker` with a nullable string binding that captures the raw value of
+    /// user-selected SFSymbol. `nil` if no symbol is selected.
+    /// - Parameter symbol: Optional string binding to store user selection.
     public init(symbol: Binding<String?>) {
         _symbol = symbol
-        canBeNone = true
+        nullable = true
     }
 
     // MARK: - View Components
@@ -110,23 +114,8 @@ public struct SymbolPicker: View {
     @ViewBuilder
     private var searchableSymbolGrid: some View {
         #if os(iOS)
-        if #available(iOS 15.0, *) {
-            symbolGrid
-                .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
-        } else {
-            VStack {
-                TextField(LocalizedString("search_placeholder"), text: $searchText)
-                    .padding(8)
-                    .padding(.horizontal, 8)
-                    .background(Color(UIColor.systemGray5))
-                    .cornerRadius(8.0)
-                    .padding(.horizontal, 16.0)
-                    .autocapitalization(.none)
-                    .disableAutocorrection(true)
-                symbolGrid
-                    .padding(.top)
-            }
-        }
+        symbolGrid
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
         #elseif os(tvOS)
         VStack {
             TextField(LocalizedString("search_placeholder"), text: $searchText)
@@ -149,7 +138,7 @@ public struct SymbolPicker: View {
                     .disableAutocorrection(true)
 
                 Button {
-                    presentationMode.wrappedValue.dismiss()
+                    dismiss()
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .resizable()
@@ -162,6 +151,16 @@ public struct SymbolPicker: View {
             Divider()
 
             symbolGrid
+
+            if canDeleteIcon {
+                Divider()
+                HStack {
+                    Spacer()
+                    deleteButton
+                        .padding(.horizontal)
+                        .padding(.vertical, 8.0)
+                }
+            }
         }
         #else
         symbolGrid
@@ -171,43 +170,17 @@ public struct SymbolPicker: View {
 
     private var symbolGrid: some View {
         ScrollView {
+            #if os(tvOS) || os(watchOS)
+            if canDeleteIcon {
+                deleteButton
+            }
+            #endif
+
             LazyVGrid(columns: [GridItem(.adaptive(minimum: Self.gridDimension, maximum: Self.gridDimension))]) {
-                // The `None` option
-                if canBeNone {
-                    Button {
-                        symbol = nil
-                        presentationMode.wrappedValue.dismiss()
-                    } label: {
-                        if symbol == nil {
-                            Text(LocalizedString("none"))
-                                .font(.headline)
-#if os(tvOS)
-                                .frame(minWidth: Self.gridDimension, minHeight: Self.gridDimension)
-#else
-                                .frame(maxWidth: .infinity, minHeight: Self.gridDimension)
-#endif
-                                .background(Self.selectedItemBackgroundColor)
-                                .cornerRadius(Self.symbolCornerRadius)
-                                .foregroundColor(.white)
-                        } else {
-                            Text(LocalizedString("none"))
-                                .font(.headline)
-                                .frame(maxWidth: .infinity, minHeight: Self.gridDimension)
-                                .background(Self.unselectedItemBackgroundColor)
-                                .cornerRadius(Self.symbolCornerRadius)
-                                .foregroundColor(.primary)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    #if os(iOS)
-                    .hoverEffect(.lift)
-                    #endif
-                }
-                // The actual symbols
                 ForEach(Self.symbols.filter { searchText.isEmpty ? true : $0.localizedCaseInsensitiveContains(searchText) }, id: \.self) { thisSymbol in
                     Button {
                         symbol = thisSymbol
-                        presentationMode.wrappedValue.dismiss()
+                        dismiss()
                     } label: {
                         if thisSymbol == symbol {
                             Image(systemName: thisSymbol)
@@ -236,6 +209,31 @@ public struct SymbolPicker: View {
                 }
             }
             .padding(.horizontal)
+
+            #if os(iOS)
+            /// Avoid last row being hidden.
+            if canDeleteIcon {
+                Spacer()
+                    .frame(height: Self.gridDimension * 2)
+            }
+            #endif
+        }
+    }
+
+    private var deleteButton: some View {
+        Button(role: .destructive) {
+            symbol = nil
+            dismiss()
+        } label: {
+            Label(LocalizedString("remove_symbol"), systemImage: "trash")
+                #if !os(tvOS) && !os(macOS)
+                .frame(maxWidth: .infinity)
+                #endif
+                #if !os(watchOS)
+                .padding(.vertical, 12.0)
+                #endif
+                .background(Self.unselectedItemBackgroundColor)
+                .clipShape(RoundedRectangle(cornerRadius: 12.0, style: .continuous))
         }
     }
 
@@ -247,6 +245,18 @@ public struct SymbolPicker: View {
                 Self.backgroundColor.edgesIgnoringSafeArea(.all)
                 #endif
                 searchableSymbolGrid
+
+                #if os(iOS)
+                if canDeleteIcon {
+                    VStack {
+                        Spacer()
+
+                        deleteButton
+                            .padding()
+                            .background(.regularMaterial)
+                    }
+                }
+                #endif
             }
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -256,7 +266,7 @@ public struct SymbolPicker: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(LocalizedString("cancel")) {
-                        presentationMode.wrappedValue.dismiss()
+                        dismiss()
                     }
                 }
             }
@@ -265,9 +275,13 @@ public struct SymbolPicker: View {
         .navigationViewStyle(.stack)
         #else
         searchableSymbolGrid
-            .frame(width: 540, height: 320, alignment: .center)
+            .frame(width: 540, height: 340, alignment: .center)
             .background(.regularMaterial)
         #endif
+    }
+
+    private var canDeleteIcon: Bool {
+        nullable && symbol != nil
     }
 
 }
@@ -277,7 +291,7 @@ private func LocalizedString(_ key: String) -> String {
 }
 
 struct SymbolPicker_Previews: PreviewProvider {
-    @State static var symbol: String = "square.and.arrow.up"
+    @State static var symbol: String? = "square.and.arrow.up"
 
     static var previews: some View {
         Group {
