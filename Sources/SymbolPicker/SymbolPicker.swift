@@ -93,7 +93,9 @@ public struct SymbolPicker: View {
             return symbol.wrappedValue
         }, set: { newValue in
             /// As the `canBeNone` is set to `false`, this can not be `nil`
-            symbol.wrappedValue = newValue!
+            if let newValue {
+                symbol.wrappedValue = newValue
+            }
         })
         canBeNone = false
     }
@@ -177,7 +179,7 @@ public struct SymbolPicker: View {
                         presentationMode.wrappedValue.dismiss()
                     } label: {
                         if symbol == nil {
-                            Text("None")
+                            Text(LocalizedString("none"))
                                 .font(.headline)
 #if os(tvOS)
                                 .frame(minWidth: Self.gridDimension, minHeight: Self.gridDimension)
@@ -188,7 +190,7 @@ public struct SymbolPicker: View {
                                 .cornerRadius(Self.symbolCornerRadius)
                                 .foregroundColor(.white)
                         } else {
-                            Text("None")
+                            Text(LocalizedString("none"))
                                 .font(.headline)
                                 .frame(maxWidth: .infinity, minHeight: Self.gridDimension)
                                 .background(Self.unselectedItemBackgroundColor)
