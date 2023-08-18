@@ -308,7 +308,7 @@ public extension SymbolPicker where Data == [Symbol] {
     @available(*, deprecated, message: "use a `Symbol` binding instead")
     init(symbol: Binding<String?>) {
         self.init(selection: .init {
-            symbol.wrappedValue.flatMap(Symbol.init(uncheckedName:))
+            symbol.wrappedValue.flatMap(Symbol.init(unsafeName:))
         } set: {
             symbol.wrappedValue = $0?.id
         })
@@ -321,7 +321,7 @@ public extension SymbolPicker where Data == [Symbol] {
     @available(*, deprecated, message: "use a `Symbol` binding instead")
     init(symbol: Binding<String>) {
         self.init(selection: .init {
-            .init(uncheckedName: symbol.wrappedValue)
+            .init(unsafeName: symbol.wrappedValue)
         } set: {
             symbol.wrappedValue = $0.id
         })

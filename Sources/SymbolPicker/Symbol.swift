@@ -15,11 +15,11 @@ import AppKit
 
 /// A light abstraction over _SF Symbol_ identifiers.
 public struct Symbol: Hashable, Identifiable, RawRepresentable {
-    /// The unchecked symbol identifier.
+    /// The _SF Symbol_ name.
     public let rawValue: String
-    /// The unchecked symbol identifier.
+    /// The _SF Symbol_ name.
     public var id: String { rawValue }
-    /// The unchecked symbol identifier.
+    /// The _SF Symbol_ name.
     public var name: String { rawValue }
     
     @_spi(Private)
@@ -34,7 +34,7 @@ public struct Symbol: Hashable, Identifiable, RawRepresentable {
     ///
     /// - Parameter id: The symbol identifier.
     /// - Note: Use `init(name:)` when you're unsure about the symbol existence.
-    public init<S: StringProtocol>(uncheckedName id: S) {
+    public init<S: StringProtocol>(unsafeName id: S) {
         self.init(rawValue: .init(id))
     }
 
@@ -44,7 +44,7 @@ public struct Symbol: Hashable, Identifiable, RawRepresentable {
     /// This will attempt to create an image and compare it against `nil`.
     ///
     /// - Parameter id: A possible symbol identifier.
-    /// - Note: Use `init(uncheckedID:)` when you are passing valid identifiers.
+    /// - Note: Use `init(unsafeName:)` when you are passing valid identifiers.
     public init?<S: StringProtocol>(name id: S) {
         let id: String = .init(id)
         #if canImport(UIKit)
@@ -76,7 +76,7 @@ extension Symbol: CaseIterable {
     ///
     /// - Parameter fileName: The name of the `.txt` file inside the specified bundle.
     /// - Parameter bundle: The resource bundle.
-    /// - Returns: A collection of unchecked `Symbol`s.
+    /// - Returns: A collection of safe `Symbol`s.
     public static func symbols(
         at fileName: String,
         in bundle: Bundle,
@@ -90,15 +90,15 @@ extension Symbol: CaseIterable {
             #endif
             return []
         }
-        return content.split(separator: "\n").map(Symbol.init(uncheckedName:))
+        return content.split(separator: "\n").map(Symbol.init(unsafeName:))
     }
 }
 
 extension Symbol: ExpressibleByStringLiteral {
     /// Initializes the symbol without checks.
     ///
-    /// - Parameter id: The unchecked symbol identifier.
+    /// - Parameter id: A safe _SF Symbol_ identifier.
     public init(stringLiteral id: String) {
-        self.init(uncheckedName: id)
+        self.init(unsafeName: id)
     }
 }
