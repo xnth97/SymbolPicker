@@ -11,17 +11,25 @@ import XCTest
 final class SymbolPickerTests: XCTestCase {
 
     func testSymbols() {
-        let allSymbols = Symbols.shared.allSymbols
-        allSymbols.forEach { symbol in
-            assertImage(systemName: symbol)
+        Symbol.allCases.forEach(assertImage)
+    }
+    
+    func testValidCheckedSymbols() {
+        Symbol.allCases.forEach {
+            XCTAssertNotNil(Symbol(name: $0.name))
         }
     }
+    
+    func testInvalidCheckedSymbol() {
+        let symbol: Symbol? = .init(name: "<:invalid:>")
+        XCTAssertNil(symbol)
+    }
 
-    private func assertImage(systemName: String) {
+    private func assertImage(for symbol: Symbol) {
         #if os(iOS) || os(watchOS) || os(tvOS)
-        XCTAssertNotNil(UIImage(systemName: systemName))
+        XCTAssertNotNil(UIImage(systemName: symbol.name))
         #else
-        XCTAssertNotNil(NSImage(systemSymbolName: systemName, accessibilityDescription: nil))
+        XCTAssertNotNil(NSImage(systemSymbolName: symbol.name, accessibilityDescription: nil))
         #endif
     }
 

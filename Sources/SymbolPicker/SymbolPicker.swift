@@ -8,13 +8,9 @@
 import SwiftUI
 
 /// A simple and cross-platform SFSymbol picker for SwiftUI.
-public struct SymbolPicker: View {
+public struct SymbolPicker<Data: RandomAccessCollection>: View where Data.Element == Symbol {
 
     // MARK: - Static consts
-
-    private static var symbols: [String] {
-        Symbols.shared.allSymbols
-    }
 
     private static var gridDimension: CGFloat {
         #if os(iOS)
@@ -76,39 +72,42 @@ public struct SymbolPicker: View {
         #endif
     }
 
+    private let symbols: Data
+    
     // MARK: - Properties
     
-    @Binding public var symbol: String?
+    @Binding public var selection: Symbol?
     @State private var searchText = ""
     @Environment(\.dismiss) private var dismiss
 
     private let nullable: Bool
 
     // MARK: - Public Init
-
-    /// Initializes `SymbolPicker` with a string binding that captures the raw value of
-    /// user-selected SFSymbol.
-    /// - Parameter symbol: String binding to store user selection.
-    public init(symbol: Binding<String>) {
-        _symbol = Binding {
-            return symbol.wrappedValue
-        } set: { newValue in
-            /// As the `nullable` is set to `false`, this can not be `nil`
-            if let newValue {
-                symbol.wrappedValue = newValue
-            }
-        }
-        nullable = false
-    }
-
+    
     /// Initializes `SymbolPicker` with a nullable string binding that captures the raw value of
-    /// user-selected SFSymbol. `nil` if no symbol is selected.
-    /// - Parameter symbol: Optional string binding to store user selection.
-    public init(symbol: Binding<String?>) {
-        _symbol = symbol
-        nullable = true
+    /// user-selected _SF Symbol_. `nil` if no symbol is selected.
+    ///
+    /// - Parameter selection: Optional `Symbol` binding to store user selection.
+    /// - Parameter symbols: A collection of _SF Symbol_ identifiers.
+    public init(selection: Binding<Symbol?>, symbols: Data) {
+        self._selection = selection
+        self.nullable = true
+        self.symbols = symbols
     }
-
+    
+    /// Initializes `SymbolPicker` with a symbol binding that captures the user-selected _SF Symbol_.
+    ///
+    /// - Parameter selection: `Symbol` binding to store user selection.
+    /// - Parameter symbols: A collection of _SF Symbol_ identifiers.
+    public init(selection: Binding<Symbol>, symbols: Data) {
+        self._selection = .init { selection.wrappedValue } set: {
+            guard let value = $0 else { return }
+            selection.wrappedValue = value
+        }
+        self.nullable = false
+        self.symbols = symbols
+    }
+    
     // MARK: - View Components
 
     @ViewBuilder
@@ -177,30 +176,32 @@ public struct SymbolPicker: View {
             #endif
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: Self.gridDimension, maximum: Self.gridDimension))]) {
-                ForEach(Self.symbols.filter { searchText.isEmpty ? true : $0.localizedCaseInsensitiveContains(searchText) }, id: \.self) { thisSymbol in
+                ForEach(symbols.filter { searchText.isEmpty ? true : $0.name.localizedCaseInsensitiveContains(searchText) }) { symbol in
                     Button {
-                        symbol = thisSymbol
+                        selection = symbol
                         dismiss()
                     } label: {
-                        if thisSymbol == symbol {
-                            Image(systemName: thisSymbol)
-                                .font(.system(size: Self.symbolSize))
-                                #if os(tvOS)
-                                .frame(minWidth: Self.gridDimension, minHeight: Self.gridDimension)
-                                #else
-                                .frame(maxWidth: .infinity, minHeight: Self.gridDimension)
-                                #endif
-                                .background(Self.selectedItemBackgroundColor)
-                                .cornerRadius(Self.symbolCornerRadius)
-                                .foregroundColor(.white)
-                        } else {
-                            Image(systemName: thisSymbol)
-                                .font(.system(size: Self.symbolSize))
-                                .frame(maxWidth: .infinity, minHeight: Self.gridDimension)
-                                .background(Self.unselectedItemBackgroundColor)
-                                .cornerRadius(Self.symbolCornerRadius)
-                                .foregroundColor(.primary)
-                        }
+                        // Account for selection.
+                        let isSelected = symbol == selection
+                        // Render the symbol.
+                        Image(systemName: symbol.name)
+                            .font(.system(size: Self.symbolSize))
+                            #if os(tvOS)
+                            .frame(
+                                minWidth: isSelected ? Self.gridDimension : nil,
+                                maxWidth: isSelected ? nil : .infinity,
+                                minHeight: Self.gridDimension
+                            )
+                            #else
+                            .frame(maxWidth: .infinity, minHeight: Self.gridDimension)
+                            #endif
+                            .background(
+                                isSelected
+                                    ? Self.selectedItemBackgroundColor
+                                    : Self.unselectedItemBackgroundColor
+                            )
+                            .cornerRadius(Self.symbolCornerRadius)
+                            .foregroundColor(isSelected ? .white : .primary)
                     }
                     .buttonStyle(.plain)
                     #if os(iOS)
@@ -222,7 +223,7 @@ public struct SymbolPicker: View {
 
     private var deleteButton: some View {
         Button(role: .destructive) {
-            symbol = nil
+            selection = nil
             dismiss()
         } label: {
             Label(LocalizedString("remove_symbol"), systemImage: "trash")
@@ -281,9 +282,50 @@ public struct SymbolPicker: View {
     }
 
     private var canDeleteIcon: Bool {
-        nullable && symbol != nil
+        nullable && selection != nil
+    }
+}
+
+public extension SymbolPicker where Data == [Symbol] {
+    /// Initializes `SymbolPicker` with a symbol binding that captures the user-selected _SF Symbol_.
+    ///
+    /// - Parameter selection: `Symbol` binding to store user selection.
+    init(selection: Binding<Symbol>) {
+        self.init(selection: selection, symbols: Symbol.allCases)
+    }
+    
+    /// Initializes `SymbolPicker` with a symbol binding that captures the user-selected _SF Symbol_.
+    ///
+    /// - Parameter selection: Optional `Symbol` binding to store user selection.
+    init(selection: Binding<Symbol?>) {
+        self.init(selection: selection, symbols: Symbol.allCases)
     }
 
+    /// Initializes `SymbolPicker` with a nullable string binding that captures the raw value of
+    /// user-selected SFSymbol. `nil` if no symbol is selected.
+    ///
+    /// - Parameter symbol: Optional string binding to store user selection.
+    @available(*, deprecated, message: "use a `Symbol` binding instead")
+    init(symbol: Binding<String?>) {
+        self.init(selection: .init {
+            symbol.wrappedValue.flatMap(Symbol.init(uncheckedName:))
+        } set: {
+            symbol.wrappedValue = $0?.id
+        })
+    }
+    
+    /// Initializes `SymbolPicker` with a string binding that captures the raw value of
+    /// user-selected SFSymbol.
+    ///
+    /// - Parameter selection: String binding to store user selection.
+    @available(*, deprecated, message: "use a `Symbol` binding instead")
+    init(symbol: Binding<String>) {
+        self.init(selection: .init {
+            .init(uncheckedName: symbol.wrappedValue)
+        } set: {
+            symbol.wrappedValue = $0.id
+        })
+    }
 }
 
 private func LocalizedString(_ key: String) -> String {
@@ -291,12 +333,12 @@ private func LocalizedString(_ key: String) -> String {
 }
 
 struct SymbolPicker_Previews: PreviewProvider {
-    @State static var symbol: String? = "square.and.arrow.up"
+    @State static var symbol: Symbol? = "square.and.arrow.up"
 
     static var previews: some View {
         Group {
-            SymbolPicker(symbol: Self.$symbol)
-            SymbolPicker(symbol: Self.$symbol)
+            SymbolPicker(selection: Self.$symbol)
+            SymbolPicker(selection: Self.$symbol)
                 .preferredColorScheme(.dark)
         }
     }
