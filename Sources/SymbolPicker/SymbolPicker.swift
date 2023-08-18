@@ -8,7 +8,7 @@
 import SwiftUI
 
 /// A simple and cross-platform SFSymbol picker for SwiftUI.
-public struct SymbolPicker<Data: RandomAccessCollection>: View where Data.Element == Symbol {
+public struct SymbolPicker: View {
 
     // MARK: - Static consts
 
@@ -72,12 +72,12 @@ public struct SymbolPicker<Data: RandomAccessCollection>: View where Data.Elemen
         #endif
     }
 
-    private let symbols: Data
+    private let symbols: [Symbol]
     
     // MARK: - Properties
     
-    @Binding public var selection: Symbol?
-    @State private var searchText = ""
+    @Binding private var selection: Symbol?
+    @State private var query = ""
     @Environment(\.dismiss) private var dismiss
 
     private let nullable: Bool
@@ -89,23 +89,23 @@ public struct SymbolPicker<Data: RandomAccessCollection>: View where Data.Elemen
     ///
     /// - Parameter selection: Optional `Symbol` binding to store user selection.
     /// - Parameter symbols: A collection of _SF Symbol_ identifiers.
-    public init(selection: Binding<Symbol?>, symbols: Data) {
+    public init<C: RandomAccessCollection>(selection: Binding<Symbol?>, symbols: C) where C.Element == Symbol {
         self._selection = selection
         self.nullable = true
-        self.symbols = symbols
+        self.symbols = .init(symbols)
     }
     
     /// Initializes `SymbolPicker` with a symbol binding that captures the user-selected _SF Symbol_.
     ///
     /// - Parameter selection: `Symbol` binding to store user selection.
     /// - Parameter symbols: A collection of _SF Symbol_ identifiers.
-    public init(selection: Binding<Symbol>, symbols: Data) {
+    public init<C: RandomAccessCollection>(selection: Binding<Symbol>, symbols: C) where C.Element == Symbol {
         self._selection = .init { selection.wrappedValue } set: {
             guard let value = $0 else { return }
             selection.wrappedValue = value
         }
         self.nullable = false
-        self.symbols = symbols
+        self.symbols = .init(symbols)
     }
     
     // MARK: - View Components
@@ -114,10 +114,10 @@ public struct SymbolPicker<Data: RandomAccessCollection>: View where Data.Elemen
     private var searchableSymbolGrid: some View {
         #if os(iOS)
         symbolGrid
-            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
+            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always))
         #elseif os(tvOS)
         VStack {
-            TextField(LocalizedString("search_placeholder"), text: $searchText)
+            TextField(LocalizedString("search_placeholder"), text: $query)
                 .padding(.horizontal, 8)
                 .autocapitalization(.none)
                 .disableAutocorrection(true)
@@ -131,7 +131,7 @@ public struct SymbolPicker<Data: RandomAccessCollection>: View where Data.Elemen
         #elseif os(macOS)
         VStack(spacing: 0) {
             HStack {
-                TextField(LocalizedString("search_placeholder"), text: $searchText)
+                TextField(LocalizedString("search_placeholder"), text: $query)
                     .textFieldStyle(.plain)
                     .font(.system(size: 18.0))
                     .disableAutocorrection(true)
@@ -163,7 +163,7 @@ public struct SymbolPicker<Data: RandomAccessCollection>: View where Data.Elemen
         }
         #else
         symbolGrid
-            .searchable(text: $searchText, placement: .automatic)
+            .searchable(text: $query, placement: .automatic)
         #endif
     }
 
@@ -176,7 +176,7 @@ public struct SymbolPicker<Data: RandomAccessCollection>: View where Data.Elemen
             #endif
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: Self.gridDimension, maximum: Self.gridDimension))]) {
-                ForEach(symbols.filter { searchText.isEmpty ? true : $0.name.localizedCaseInsensitiveContains(searchText) }) { symbol in
+                ForEach(query.isEmpty ? symbols : symbols.filter { $0.name.localizedCaseInsensitiveContains(query) }) { symbol in
                     Button {
                         selection = symbol
                         dismiss()
@@ -286,7 +286,7 @@ public struct SymbolPicker<Data: RandomAccessCollection>: View where Data.Elemen
     }
 }
 
-public extension SymbolPicker where Data == [Symbol] {
+public extension SymbolPicker {
     /// Initializes `SymbolPicker` with a symbol binding that captures the user-selected _SF Symbol_.
     ///
     /// - Parameter selection: `Symbol` binding to store user selection.
