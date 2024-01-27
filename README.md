@@ -11,10 +11,6 @@ SymbolPicker provides a simple and cross-platform interface for picking a SFSymb
 
 ![](/Screenshots/demo.png)
 
-### visionOS
-
-Please use [xrOS branch](https://github.com/xnth97/SymbolPicker/tree/xrOS) for visionOS. Main branch should also work fine out-of-box thanks to SwiftUI, but I'll be experimenting visionOS-only features on xrOS branch.
-
 ![](/Screenshots/xros.png)
 
 ## Usage
@@ -31,7 +27,7 @@ SymbolPicker is available as a Swift Package. Add this repo to your project thro
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/xnth97/SymbolPicker.git", .upToNextMajor(from: "1.4.0"))
+    .package(url: "https://github.com/xnth97/SymbolPicker.git", .upToNextMajor(from: "1.5.0"))
 ]
 ```
 

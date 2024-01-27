@@ -76,6 +76,14 @@ public struct SymbolPicker: View {
         #endif
     }
 
+    private static var deleteButtonTextVerticalPadding: CGFloat {
+        #if os(iOS)
+        return 12.0
+        #else
+        return 8.0
+        #endif
+    }
+
     // MARK: - Properties
     
     @Binding public var symbol: String?
@@ -191,7 +199,11 @@ public struct SymbolPicker: View {
                                 .frame(maxWidth: .infinity, minHeight: Self.gridDimension)
                                 #endif
                                 .background(Self.selectedItemBackgroundColor)
+                                #if os(visionOS)
+                                .clipShape(Circle())
+                                #else
                                 .cornerRadius(Self.symbolCornerRadius)
+                                #endif
                                 .foregroundColor(.white)
                         } else {
                             Image(systemName: thisSymbol)
@@ -210,7 +222,7 @@ public struct SymbolPicker: View {
             }
             .padding(.horizontal)
 
-            #if os(iOS)
+            #if os(iOS) || os(visionOS)
             /// Avoid last row being hidden.
             if canDeleteIcon {
                 Spacer()
@@ -230,7 +242,7 @@ public struct SymbolPicker: View {
                 .frame(maxWidth: .infinity)
                 #endif
                 #if !os(watchOS)
-                .padding(.vertical, 12.0)
+                .padding(.vertical, Self.deleteButtonTextVerticalPadding)
                 #endif
                 .background(Self.unselectedItemBackgroundColor)
                 .clipShape(RoundedRectangle(cornerRadius: 12.0, style: .continuous))
@@ -246,7 +258,7 @@ public struct SymbolPicker: View {
                 #endif
                 searchableSymbolGrid
 
-                #if os(iOS)
+                #if os(iOS) || os(visionOS)
                 if canDeleteIcon {
                     VStack {
                         Spacer()
@@ -265,8 +277,10 @@ public struct SymbolPicker: View {
             /// tvOS can use back button on remote
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(LocalizedString("cancel")) {
+                    Button {
                         dismiss()
+                    } label: {
+                        Text(LocalizedString("cancel"))
                     }
                 }
             }
