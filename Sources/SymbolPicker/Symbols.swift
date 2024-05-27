@@ -8,13 +8,27 @@
 import Foundation
 
 /// Simple singleton class for providing symbols list per platform availability.
-class Symbols {
+public class Symbols {
 
     /// Singleton instance.
-    static let shared = Symbols()
+    public static let shared = Symbols()
+
+    /// Filter closure that checks each symbol name string should be included.
+    public var filter: ((String) -> Bool)? {
+        didSet {
+            if let filter {
+                symbols = allSymbols.filter(filter)
+            } else {
+                symbols = allSymbols
+            }
+        }
+    }
+
+    /// Array of the symbol name strings to be displayed.
+    private(set) var symbols: [String]
 
     /// Array of all available symbol name strings.
-    let allSymbols: [String]
+    private let allSymbols: [String]
 
     private init() {
         if #available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, visionOS 1.0, *) {
@@ -24,6 +38,7 @@ class Symbols {
         } else {
             self.allSymbols = Self.fetchSymbols(fileName: "sfsymbol")
         }
+        self.symbols = self.allSymbols
     }
 
     private static func fetchSymbols(fileName: String) -> [String] {

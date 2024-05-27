@@ -10,10 +10,23 @@ import XCTest
 
 final class SymbolPickerTests: XCTestCase {
 
+    override class func setUp() {
+        super.setUp()
+        Symbols.shared.filter = nil
+    }
+
     func testSymbols() {
-        let allSymbols = Symbols.shared.allSymbols
+        let allSymbols = Symbols.shared.symbols
         allSymbols.forEach { symbol in
             assertImage(systemName: symbol)
+        }
+    }
+
+    func testFilter() {
+        Symbols.shared.filter = { $0.contains(".circle") }
+        let symbols = Symbols.shared.symbols
+        symbols.forEach {
+            XCTAssert($0.contains(".circle"))
         }
     }
 

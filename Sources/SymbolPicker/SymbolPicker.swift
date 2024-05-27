@@ -10,11 +10,7 @@ import SwiftUI
 /// A simple and cross-platform SFSymbol picker for SwiftUI.
 public struct SymbolPicker: View {
 
-    // MARK: - Static consts
-
-    private static var symbols: [String] {
-        Symbols.shared.allSymbols
-    }
+    // MARK: - Static constants
 
     private static var gridDimension: CGFloat {
         #if os(iOS)
@@ -70,7 +66,7 @@ public struct SymbolPicker: View {
 
     private static var backgroundColor: Color {
         #if os(iOS)
-        return Color(UIColor.systemGroupedBackground)
+        return Color(UIColor.secondarySystemBackground)
         #else
         return .clear
         #endif
@@ -92,29 +88,41 @@ public struct SymbolPicker: View {
 
     private let nullable: Bool
 
-    // MARK: - Public Init
+    // MARK: - Init
 
-    /// Initializes `SymbolPicker` with a string binding that captures the raw value of
-    /// user-selected SFSymbol.
-    /// - Parameter symbol: String binding to store user selection.
+    /// Initializes `SymbolPicker` with a string binding to the selected symbol name.
+    ///
+    /// - Parameters:
+    ///   - symbol: A binding to a `String` that represents the name of the selected symbol.
+    ///     When a symbol is picked, this binding is updated with the symbol's name.
     public init(symbol: Binding<String>) {
-        _symbol = Binding {
-            return symbol.wrappedValue
-        } set: { newValue in
-            /// As the `nullable` is set to `false`, this can not be `nil`
-            if let newValue {
-                symbol.wrappedValue = newValue
-            }
-        }
-        nullable = false
+        self.init(
+            symbol: Binding {
+                return symbol.wrappedValue
+            } set: { newValue in
+                /// As the `nullable` is set to `false`, this can not be `nil`
+                if let newValue {
+                    symbol.wrappedValue = newValue
+                }
+            },
+            nullable: false)
     }
 
-    /// Initializes `SymbolPicker` with a nullable string binding that captures the raw value of
-    /// user-selected SFSymbol. `nil` if no symbol is selected.
-    /// - Parameter symbol: Optional string binding to store user selection.
+    /// Initializes `SymbolPicker` with a nullable string binding to the selected symbol name.
+    ///
+    /// - Parameters:
+    ///   - symbol: A binding to a `String` that represents the name of the selected symbol.
+    ///     When a symbol is picked, this binding is updated with the symbol's name. When no symbol
+    ///     is picked, the value will be `nil`.
     public init(symbol: Binding<String?>) {
-        _symbol = symbol
-        nullable = true
+        self.init(symbol: symbol, nullable: true)
+    }
+
+    /// Private designated initializer.
+    private init(symbol: Binding<String?>,
+                 nullable: Bool) {
+        self._symbol = symbol
+        self.nullable = nullable
     }
 
     // MARK: - View Components
@@ -185,7 +193,7 @@ public struct SymbolPicker: View {
             #endif
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: Self.gridDimension, maximum: Self.gridDimension))]) {
-                ForEach(Self.symbols.filter { searchText.isEmpty ? true : $0.localizedCaseInsensitiveContains(searchText) }, id: \.self) { thisSymbol in
+                ForEach(symbols.filter { searchText.isEmpty ? true : $0.localizedCaseInsensitiveContains(searchText) }, id: \.self) { thisSymbol in
                     Button {
                         symbol = thisSymbol
                         dismiss()
@@ -298,20 +306,38 @@ public struct SymbolPicker: View {
         nullable && symbol != nil
     }
 
+    private var symbols: [String] {
+        Symbols.shared.symbols
+    }
+
 }
 
 private func LocalizedString(_ key: String) -> String {
     NSLocalizedString(key, bundle: .module, comment: "")
 }
 
-struct SymbolPicker_Previews: PreviewProvider {
-    @State static var symbol: String? = "square.and.arrow.up"
+// MARK: - Debug
 
-    static var previews: some View {
-        Group {
-            SymbolPicker(symbol: Self.$symbol)
-            SymbolPicker(symbol: Self.$symbol)
-                .preferredColorScheme(.dark)
+#if DEBUG
+#Preview("Normal") {
+    struct Preview: View {
+        @State private var symbol: String? = "square.and.arrow.up"
+        var body: some View {
+            SymbolPicker(symbol: $symbol)
         }
     }
+    return Preview()
 }
+
+#Preview("Filter Example") {
+    Symbols.shared.filter = { $0.contains(".circle") }
+    
+    struct Preview: View {
+        @State private var symbol: String? = "square.and.arrow.up.circle.fill"
+        var body: some View {
+            SymbolPicker(symbol: $symbol)
+        }
+    }
+    return Preview()
+}
+#endif
