@@ -312,8 +312,8 @@ public struct SymbolPicker: View {
 
 }
 
-private func LocalizedString(_ key: String) -> String {
-    NSLocalizedString(key, bundle: .module, comment: "")
+private func LocalizedString(_ key: String.LocalizationValue) -> String {
+    String(localized: key, bundle: .module)
 }
 
 // MARK: - Debug
