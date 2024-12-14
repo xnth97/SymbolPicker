@@ -1,4 +1,4 @@
-// swift-tools-version:5.10
+// swift-tools-version:6.0
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -7,11 +7,11 @@ let package = Package(
     name: "SymbolPicker",
     defaultLocalization: "en",
     platforms: [
-        .iOS(.v15),
-        .macCatalyst(.v15),
-        .macOS(.v12),
-        .tvOS(.v15),
-        .watchOS(.v8),
+        .iOS(.v16),
+        .macCatalyst(.v16),
+        .macOS(.v13),
+        .tvOS(.v16),
+        .watchOS(.v9),
         .visionOS(.v1),
     ],
     products: [

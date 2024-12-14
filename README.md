@@ -18,9 +18,9 @@ SymbolPicker provides a simple and cross-platform interface for picking a SFSymb
 
 ### Requirements
 
-* iOS 15.0+ / macOS 12.0+ / watchOS 8.0+ / tvOS 15.0+ / visionOS 1.0+
-* Xcode 14.0+
-* Swift 5.5+
+* iOS 16.0+ / macOS 13.0+ / watchOS 9.0+ / tvOS 16.0+ / visionOS 1.0+
+* Xcode 16.0+
+* Swift 6.0+
 
 ### Installation
 
@@ -28,7 +28,7 @@ SymbolPicker is available as a Swift Package. Add this repo to your project thro
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/xnth97/SymbolPicker.git", .upToNextMajor(from: "1.5.0"))
+    .package(url: "https://github.com/xnth97/SymbolPicker.git", .upToNextMajor(from: "1.6.0"))
 ]
 ```
 

@@ -8,7 +8,8 @@
 import Foundation
 
 /// Simple singleton class for providing symbols list per platform availability.
-public class Symbols {
+@MainActor
+public class Symbols: Sendable {
 
     /// Singleton instance.
     public static let shared = Symbols()
@@ -31,13 +32,14 @@ public class Symbols {
     private let allSymbols: [String]
 
     private init() {
-        if #available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, visionOS 1.0, *) {
-            self.allSymbols = Self.fetchSymbols(fileName: "sfsymbol5")
-        } else if #available(iOS 16.0, macOS 13.0, tvOS 16.0, watchOS 9.0, *) {
-            self.allSymbols = Self.fetchSymbols(fileName: "sfsymbol4")
+        let filename = if #available(iOS 18.0, macOS 15.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, *) {
+            "sfsymbol6"
+        } else if #available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, visionOS 1.0, *) {
+            "sfsymbol5"
         } else {
-            self.allSymbols = Self.fetchSymbols(fileName: "sfsymbol")
+            "sfsymbol4"
         }
+        self.allSymbols = Self.fetchSymbols(fileName: filename)
         self.symbols = self.allSymbols
     }
 

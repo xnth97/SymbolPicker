@@ -5,16 +5,22 @@
 //  Created by Yubo Qin on 2/23/23.
 //
 
-import XCTest
+import Testing
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 @testable import SymbolPicker
 
-final class SymbolPickerTests: XCTestCase {
+@MainActor
+struct SymbolPickerTests {
 
-    override class func setUp() {
-        super.setUp()
+    init() {
         Symbols.shared.filter = nil
     }
 
+    @Test("Test initialization of symbols")
     func testSymbols() {
         let allSymbols = Symbols.shared.symbols
         allSymbols.forEach { symbol in
@@ -22,19 +28,20 @@ final class SymbolPickerTests: XCTestCase {
         }
     }
 
+    @Test("Test filtering of symbols")
     func testFilter() {
         Symbols.shared.filter = { $0.contains(".circle") }
         let symbols = Symbols.shared.symbols
         symbols.forEach {
-            XCTAssert($0.contains(".circle"))
+            #expect($0.contains(".circle"))
         }
     }
 
     private func assertImage(systemName: String) {
-        #if os(iOS) || os(watchOS) || os(tvOS)
-        XCTAssertNotNil(UIImage(systemName: systemName))
-        #else
-        XCTAssertNotNil(NSImage(systemSymbolName: systemName, accessibilityDescription: nil))
+        #if canImport(UIKit)
+        #expect(UIImage(systemName: systemName) != nil)
+        #elseif canImport(AppKit)
+        #expect(NSImage(systemSymbolName: systemName, accessibilityDescription: nil) != nil)
         #endif
     }
 
