@@ -87,15 +87,18 @@ public struct SymbolPicker: View {
     @Environment(\.dismiss) private var dismiss
 
     private let nullable: Bool
+    private let categories: [SymbolCategory]
 
     // MARK: - Init
 
-    /// Initializes `SymbolPicker` with a string binding to the selected symbol name.
+    /// Initializes `SymbolPicker` with a string binding to the selected symbol name and default categories to display.
     ///
     /// - Parameters:
     ///   - symbol: A binding to a `String` that represents the name of the selected symbol.
     ///     When a symbol is picked, this binding is updated with the symbol's name.
-    public init(symbol: Binding<String>) {
+    ///   - categories: An array of `SymbolCategory` that represents the categories of the symbols to be displayed.
+    ///     Default is `.all`.
+    public init(symbol: Binding<String>, categories: [SymbolCategory] = .all) {
         self.init(
             symbol: Binding {
                 return symbol.wrappedValue
@@ -105,24 +108,29 @@ public struct SymbolPicker: View {
                     symbol.wrappedValue = newValue
                 }
             },
-            nullable: false)
+            nullable: false,
+            categories: categories
+        )
     }
 
-    /// Initializes `SymbolPicker` with a nullable string binding to the selected symbol name.
+    /// Initializes `SymbolPicker` with a nullable string binding to the selected symbol name and default categories to display.
     ///
     /// - Parameters:
     ///   - symbol: A binding to a `String` that represents the name of the selected symbol.
     ///     When a symbol is picked, this binding is updated with the symbol's name. When no symbol
     ///     is picked, the value will be `nil`.
-    public init(symbol: Binding<String?>) {
-        self.init(symbol: symbol, nullable: true)
+    ///   - categories: An array of `SymbolCategory` that represents the categories of the symbols to be displayed.
+    ///     Default is `.all`.
+    public init(symbol: Binding<String?>, categories: [SymbolCategory] = .all) {
+        self.init(symbol: symbol, nullable: true, categories: categories)
     }
 
     /// Private designated initializer.
     private init(symbol: Binding<String?>,
-                 nullable: Bool) {
+                 nullable: Bool, categories: [SymbolCategory] ) {
         self._symbol = symbol
         self.nullable = nullable
+        self.categories = categories
     }
 
     // MARK: - View Components
@@ -193,13 +201,16 @@ public struct SymbolPicker: View {
             #endif
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: Self.gridDimension, maximum: Self.gridDimension))]) {
-                ForEach(symbols.filter { searchText.isEmpty ? true : $0.localizedCaseInsensitiveContains(searchText) }, id: \.self) { thisSymbol in
+                ForEach(symbols.filter {
+                    categories == .all || !$0.categories.isDisjoint(with: categories)
+                    && (searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText))
+                }) { thisSymbol in
                     Button {
-                        symbol = thisSymbol
+                        symbol = thisSymbol.name
                         dismiss()
                     } label: {
-                        if thisSymbol == symbol {
-                            Image(systemName: thisSymbol)
+                        if thisSymbol.name == symbol {
+                            Image(systemName: thisSymbol.name)
                                 .font(.system(size: Self.symbolSize))
                                 #if os(tvOS)
                                 .frame(minWidth: Self.gridDimension, minHeight: Self.gridDimension)
@@ -214,7 +225,7 @@ public struct SymbolPicker: View {
                                 #endif
                                 .foregroundColor(.white)
                         } else {
-                            Image(systemName: thisSymbol)
+                            Image(systemName: thisSymbol.name)
                                 .font(.system(size: Self.symbolSize))
                                 .frame(maxWidth: .infinity, minHeight: Self.gridDimension)
                                 .background(Self.unselectedItemBackgroundColor)
@@ -306,7 +317,7 @@ public struct SymbolPicker: View {
         nullable && symbol != nil
     }
 
-    private var symbols: [String] {
+    private var symbols: [Symbol] {
         Symbols.shared.symbols
     }
 
@@ -340,4 +351,15 @@ private func LocalizedString(_ key: String.LocalizationValue) -> String {
     }
     return Preview()
 }
+
+#Preview("Categories Example") {
+    struct Preview: View {
+        @State private var symbol: String = ""
+        var body: some View {
+            SymbolPicker(symbol: $symbol, categories: [.maps, .math])
+        }
+    }
+    return Preview()
+}
+
 #endif
