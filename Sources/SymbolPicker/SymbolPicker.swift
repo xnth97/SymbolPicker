@@ -193,13 +193,13 @@ public struct SymbolPicker: View {
             #endif
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: Self.gridDimension, maximum: Self.gridDimension))]) {
-                ForEach(symbols.filter { searchText.isEmpty ? true : $0.localizedCaseInsensitiveContains(searchText) }, id: \.self) { thisSymbol in
+                ForEach(symbols.filter { searchText.isEmpty ? true : $0.name.localizedCaseInsensitiveContains(searchText) }) { thisSymbol in
                     Button {
-                        symbol = thisSymbol
+                        symbol = thisSymbol.name
                         dismiss()
                     } label: {
-                        if thisSymbol == symbol {
-                            Image(systemName: thisSymbol)
+                        if thisSymbol.name == symbol {
+                            Image(systemName: thisSymbol.name)
                                 .font(.system(size: Self.symbolSize))
                                 #if os(tvOS)
                                 .frame(minWidth: Self.gridDimension, minHeight: Self.gridDimension)
@@ -214,7 +214,7 @@ public struct SymbolPicker: View {
                                 #endif
                                 .foregroundColor(.white)
                         } else {
-                            Image(systemName: thisSymbol)
+                            Image(systemName: thisSymbol.name)
                                 .font(.system(size: Self.symbolSize))
                                 .frame(maxWidth: .infinity, minHeight: Self.gridDimension)
                                 .background(Self.unselectedItemBackgroundColor)
@@ -306,7 +306,7 @@ public struct SymbolPicker: View {
         nullable && symbol != nil
     }
 
-    private var symbols: [String] {
+    private var symbols: [Symbol] {
         Symbols.shared.symbols
     }
 
