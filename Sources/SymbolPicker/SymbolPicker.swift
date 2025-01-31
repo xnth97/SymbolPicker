@@ -87,6 +87,7 @@ public struct SymbolPicker: View {
     @Environment(\.dismiss) private var dismiss
 
     private let nullable: Bool
+    private let categories: [SymbolCategory]
 
     // MARK: - Init
 
@@ -95,7 +96,7 @@ public struct SymbolPicker: View {
     /// - Parameters:
     ///   - symbol: A binding to a `String` that represents the name of the selected symbol.
     ///     When a symbol is picked, this binding is updated with the symbol's name.
-    public init(symbol: Binding<String>) {
+    public init(symbol: Binding<String>, categories: [SymbolCategory] = .all) {
         self.init(
             symbol: Binding {
                 return symbol.wrappedValue
@@ -105,7 +106,9 @@ public struct SymbolPicker: View {
                     symbol.wrappedValue = newValue
                 }
             },
-            nullable: false)
+            nullable: false,
+            categories: categories
+        )
     }
 
     /// Initializes `SymbolPicker` with a nullable string binding to the selected symbol name.
@@ -114,15 +117,16 @@ public struct SymbolPicker: View {
     ///   - symbol: A binding to a `String` that represents the name of the selected symbol.
     ///     When a symbol is picked, this binding is updated with the symbol's name. When no symbol
     ///     is picked, the value will be `nil`.
-    public init(symbol: Binding<String?>) {
-        self.init(symbol: symbol, nullable: true)
+    public init(symbol: Binding<String?>, categories: [SymbolCategory] = .all) {
+        self.init(symbol: symbol, nullable: true, categories: categories)
     }
 
     /// Private designated initializer.
     private init(symbol: Binding<String?>,
-                 nullable: Bool) {
+                 nullable: Bool, categories: [SymbolCategory] ) {
         self._symbol = symbol
         self.nullable = nullable
+        self.categories = categories
     }
 
     // MARK: - View Components
@@ -193,7 +197,10 @@ public struct SymbolPicker: View {
             #endif
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: Self.gridDimension, maximum: Self.gridDimension))]) {
-                ForEach(symbols.filter { searchText.isEmpty ? true : $0.name.localizedCaseInsensitiveContains(searchText) }) { thisSymbol in
+                ForEach(symbols.filter {
+                    categories == .all || !$0.categories.isDisjoint(with: categories)
+                    && (searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText))
+                }) { thisSymbol in
                     Button {
                         symbol = thisSymbol.name
                         dismiss()
@@ -340,4 +347,15 @@ private func LocalizedString(_ key: String.LocalizationValue) -> String {
     }
     return Preview()
 }
+
+#Preview("Categories Example") {
+    struct Preview: View {
+        @State private var symbol: String = ""
+        var body: some View {
+            SymbolPicker(symbol: $symbol, categories: [.maps, .math])
+        }
+    }
+    return Preview()
+}
+
 #endif

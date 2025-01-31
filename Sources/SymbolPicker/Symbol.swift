@@ -9,7 +9,7 @@ import Foundation
 
 public class Symbol: Identifiable {
     let name: String
-    let categories: [SymbolCategory]
+    let categories: Set<SymbolCategory>
     
     public var id: String { name }
     
@@ -18,12 +18,16 @@ public class Symbol: Identifiable {
         guard components.count > 0 else { fatalError("Invalid symbol line: \(line)") }
         
         self.name = String(components[0])
-        self.categories = components.dropFirst().map { SymbolCategory(rawValue: String($0))! }
+        self.categories = Set(components.dropFirst().map { SymbolCategory(rawValue: String($0))! })
     }
 }
 
-enum SymbolCategory: String, CaseIterable {
-    case all
+extension [SymbolCategory] {
+    public static let all = SymbolCategory.allCases
+}
+
+public enum SymbolCategory: String, CaseIterable, Sendable {
+//    case all
     case whatsnew
     case multicolor
     case variablecolor
@@ -57,8 +61,8 @@ enum SymbolCategory: String, CaseIterable {
     
     var name: String {
         switch self {
-        case .all:
-            "All"
+//        case .all:
+//            "All"
         case .whatsnew:
             "What's New"
         case .multicolor:
@@ -124,8 +128,8 @@ enum SymbolCategory: String, CaseIterable {
     
     var systemImage: String {
         switch self {
-        case .all:
-            "square.grid.2x2"
+//        case .all:
+//            "square.grid.2x2"
         case .whatsnew:
             "sparkles"
         case .multicolor:
