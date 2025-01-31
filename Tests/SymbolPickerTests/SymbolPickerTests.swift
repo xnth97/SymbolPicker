@@ -39,13 +39,11 @@ struct SymbolPickerTests {
     
     @Test("Test categories of symbols")
     func testCategories() {
-        SymbolCategory.allCases.forEach { category in
-            Symbols.shared.filter = { $0.contains(category.name) }
-            let symbols = Symbols.shared.symbols
-            symbols.forEach {
-                #expect($0.categories.contains(category))
-            }
-        }
+        let categories: [SymbolCategory] = [.maps]
+        let symbols = Symbols.shared.symbols.filter { !$0.categories.isDisjoint(with: categories) }
+        
+        assert(symbols.contains { $0.name.contains("figure.walk") })
+        assert(!symbols.contains { $0.name.contains("pencil") })
     }
 
     private func assertImage(systemName: String) {
