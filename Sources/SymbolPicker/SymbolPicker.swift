@@ -91,11 +91,13 @@ public struct SymbolPicker: View {
 
     // MARK: - Init
 
-    /// Initializes `SymbolPicker` with a string binding to the selected symbol name.
+    /// Initializes `SymbolPicker` with a string binding to the selected symbol name and default categories to display.
     ///
     /// - Parameters:
     ///   - symbol: A binding to a `String` that represents the name of the selected symbol.
     ///     When a symbol is picked, this binding is updated with the symbol's name.
+    ///   - categories: An array of `SymbolCategory` that represents the categories of the symbols to be displayed.
+    ///     Default is `.all`.
     public init(symbol: Binding<String>, categories: [SymbolCategory] = .all) {
         self.init(
             symbol: Binding {
@@ -111,12 +113,14 @@ public struct SymbolPicker: View {
         )
     }
 
-    /// Initializes `SymbolPicker` with a nullable string binding to the selected symbol name.
+    /// Initializes `SymbolPicker` with a nullable string binding to the selected symbol name and default categories to display.
     ///
     /// - Parameters:
     ///   - symbol: A binding to a `String` that represents the name of the selected symbol.
     ///     When a symbol is picked, this binding is updated with the symbol's name. When no symbol
     ///     is picked, the value will be `nil`.
+    ///   - categories: An array of `SymbolCategory` that represents the categories of the symbols to be displayed.
+    ///     Default is `.all`.
     public init(symbol: Binding<String?>, categories: [SymbolCategory] = .all) {
         self.init(symbol: symbol, nullable: true, categories: categories)
     }
