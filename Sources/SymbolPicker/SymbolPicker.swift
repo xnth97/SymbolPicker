@@ -202,7 +202,7 @@ public struct SymbolPicker: View {
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: Self.gridDimension, maximum: Self.gridDimension))]) {
                 ForEach(symbols.filter {
-                    categories == .all || !$0.categories.isDisjoint(with: categories)
+                    (categories == .all || !$0.categories.isDisjoint(with: categories))
                     && (searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText))
                 }) { thisSymbol in
                     Button {
