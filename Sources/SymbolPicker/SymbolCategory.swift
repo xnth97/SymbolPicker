@@ -7,176 +7,115 @@
 
 import Foundation
 
-/// Extension to provide all cases of `SymbolCategory`.
 extension [SymbolCategory] {
-    public static let all = SymbolCategory.allCases
+    public static let all = [SymbolCategory.all]
 }
 
-/// `SymbolCategory` is an enum that represents the categories of SF Symbols.
-public enum SymbolCategory: String, CaseIterable, Sendable {
-//    case all
-    case whatsnew
-    case multicolor
-    case variablecolor
-    case communication
-    case weather
-    case maps
-    case objectsandtools
-    case devices
-    case cameraandphotos
-    case gaming
-    case connectivity
-    case transportation
-    case automotive
-    case accessibility
-    case privacyandsecurity
-    case human
-    case home
-    case fitness
-    case nature
-    case editing
-    case textformatting
-    case media
-    case keyboard
-    case commerce
-    case time
-    case health
-    case shapes
-    case arrows
-    case indices
-    case math
+/// `SymbolCategory` is a struct that represents categories of SF Symbols.
+public struct SymbolCategory: CaseIterable, Equatable, Hashable, Sendable {
+    public static let allCases: [SymbolCategory] = Array(defaultCategories.values)
+    public static let all = SymbolCategory("All", systemImage: "circle", isMember: { _ in true })
+    public static let whatsnew = defaultCategory("whatsnew")
+    public static let multicolor = defaultCategory("multicolor")
+    public static let variablecolor = defaultCategory("variablecolor")
+    public static let communication = defaultCategory("communication")
+    public static let weather = defaultCategory("weather")
+    public static let maps = defaultCategory("maps")
+    public static let objectsandtools = defaultCategory("objectsandtools")
+    public static let devices = defaultCategory("devices")
+    public static let cameraandphotos = defaultCategory("cameraandphotos")
+    public static let gaming = defaultCategory("gaming")
+    public static let connectivity = defaultCategory("connectivity")
+    public static let transportation = defaultCategory("transportation")
+    public static let accessibility = defaultCategory("cccessibility")
+    public static let privacyandsecurity = defaultCategory("privacyandsecurity")
+    public static let human = defaultCategory("human")
+    public static let home = defaultCategory("home")
+    public static let fitness = defaultCategory("fitness")
+    public static let nature = defaultCategory("nature")
+    public static let editing = defaultCategory("editing")
+    public static let textformatting = defaultCategory("textformatting")
+    public static let media = defaultCategory("media")
+    public static let keyboard = defaultCategory("keyboard")
+    public static let commerce = defaultCategory("commerce")
+    public static let time = defaultCategory("time")
+    public static let health = defaultCategory("health")
+    public static let shapes = defaultCategory("shapes")
+    public static let arrows = defaultCategory("arrows")
+    public static let indices = defaultCategory("indices")
+    public static let math = defaultCategory("math")
     
-    var name: String {
-        switch self {
-//        case .all:
-//            "All"
-        case .whatsnew:
-            "What's New"
-        case .multicolor:
-            "Multicolor"
-        case .variablecolor:
-            "Variable Color"
-        case .communication:
-            "Communication"
-        case .weather:
-            "Weather"
-        case .maps:
-            "Maps"
-        case .objectsandtools:
-            "Objects and Tools"
-        case .devices:
-            "Devices"
-        case .cameraandphotos:
-            "Camera and Photos"
-        case .gaming:
-            "Gaming"
-        case .connectivity:
-            "Connectivity"
-        case .transportation:
-            "Transportation"
-        case .automotive:
-            "Automotive"
-        case .accessibility:
-            "Accessibility"
-        case .privacyandsecurity:
-            "Privacy and Security"
-        case .human:
-            "Human"
-        case .home:
-            "Home"
-        case .fitness:
-            "Fitness"
-        case .nature:
-            "Nature"
-        case .editing:
-            "Editing"
-        case .textformatting:
-            "Text Formatting"
-        case .media:
-            "Media"
-        case .keyboard:
-            "Keyboard"
-        case .commerce:
-            "Commerce"
-        case .time:
-            "Time"
-        case .health:
-            "Health"
-        case .shapes:
-            "Shapes"
-        case .arrows:
-            "Arrows"
-        case .indices:
-            "Indices"
-        case .math:
-            "Math"
-        }
+    public static func defaultCategory(from name: String) -> SymbolCategory? {
+        defaultCategories[name]
     }
     
-    var systemImage: String {
-        switch self {
-//        case .all:
-//            "square.grid.2x2"
-        case .whatsnew:
-            "sparkles"
-        case .multicolor:
-            "paintpalette"
-        case .variablecolor:
-            "slider.horizontal.below.square.and.square.filled"
-        case .communication:
-            "message"
-        case .weather:
-            "cloud.sun"
-        case .maps:
-            "map"
-        case .objectsandtools:
-            "folder"
-        case .devices:
-            "desktopcomputer"
-        case .cameraandphotos:
-            "camera"
-        case .gaming:
-            "gamecontroller"
-        case .connectivity:
-            "antenna.radiowaves.left.and.right"
-        case .transportation:
-            "car.fill"
-        case .automotive:
-            "steeringwheel"
-        case .accessibility:
-            "accessibility"
-        case .privacyandsecurity:
-            "lock"
-        case .human:
-            "person.crop.circle"
-        case .home:
-            "house"
-        case .fitness:
-            "figure.run"
-        case .nature:
-            "leaf"
-        case .editing:
-            "slider.horizontal.3"
-        case .textformatting:
-            "textformat"
-        case .media:
-            "playpause"
-        case .keyboard:
-            "command"
-        case .commerce:
-            "cart"
-        case .time:
-            "timer"
-        case .health:
-            "heart"
-        case .shapes:
-            "square.on.circle"
-        case .arrows:
-            "arrow.forward"
-        case .indices:
-            "a.circle"
-        case .math:
-            "x.squareroot"
-        }
+    public static func == (lhs: SymbolCategory, rhs: SymbolCategory) -> Bool {
+        lhs.name == rhs.name
+    }
+    
+    private static func defaultCategory(_ name: String) -> SymbolCategory {
+        defaultCategory(from: name)!
+    }
+    
+    private static let defaultCategories = Dictionary(uniqueKeysWithValues: [
+        SymbolCategory("What's New", systemImage: "sparkles"),
+        SymbolCategory("Multicolor", systemImage: "paintpalette"),
+        SymbolCategory("Variable Color", systemImage: "slider.horizontal.below.square.and.square.filled"),
+        SymbolCategory("Communication", systemImage: "message"),
+        SymbolCategory("Weather", systemImage: "cloud.sun"),
+        SymbolCategory("Maps", systemImage: "map"),
+        SymbolCategory("Objects and Tools", systemImage: "folder"),
+        SymbolCategory("Devices", systemImage: "desktopcomputer"),
+        SymbolCategory("Camera and Photos", systemImage: "camera"),
+        SymbolCategory("Gaming", systemImage: "gamecontroller"),
+        SymbolCategory("Connectivity", systemImage: "antenna.radiowaves.left.and.right"),
+        SymbolCategory("Transportation", systemImage: "car.fill"),
+        SymbolCategory("Automotive", systemImage: "steeringwheel"),
+        SymbolCategory("Accessibility", systemImage: "accessibility"),
+        SymbolCategory("Privacy and Security", systemImage: "lock"),
+        SymbolCategory("Human", systemImage: "person.crop.circle"),
+        SymbolCategory("Home", systemImage: "house"),
+        SymbolCategory("Fitness", systemImage: "figure.run"),
+        SymbolCategory("Nature", systemImage: "leaf"),
+        SymbolCategory("Editing", systemImage: "slider.horizontal.3"),
+        SymbolCategory("Text Formatting", systemImage: "textformat"),
+        SymbolCategory("Media", systemImage: "playpause"),
+        SymbolCategory("Keyboard", systemImage: "command"),
+        SymbolCategory("Commerce", systemImage: "cart"),
+        SymbolCategory("Time", systemImage: "timer"),
+        SymbolCategory("Health", systemImage: "heart"),
+        SymbolCategory("Shapes", systemImage: "square.on.circle"),
+        SymbolCategory("Arrows", systemImage: "arrow.forward"),
+        SymbolCategory("Indices", systemImage: "a.circle"),
+        SymbolCategory("Math", systemImage: "x.squareroot")
+    ]
+        .map({ (formatKey($0.name), $0) }))
+    
+    private static func formatKey(_ key: String) -> String {
+        key.replacingOccurrences(of: "[^a-zA-Z0-9]", with: "", options: .regularExpression).lowercased()
+    }
+    
+    public init(_ name: String, systemImage: String, isMember: @escaping @Sendable (Symbol) -> Bool) {
+        self.name = name
+        self.systemImage = systemImage
+        self.isMember = isMember
+    }
+    
+    public init (_ name: String, systemImage: String) {
+        self.init(name,
+                  systemImage: systemImage,
+                  isMember: { symbol in symbol.categories.contains(where: { $0.name == name }) })
+    }
+    
+    let name: String
+    let systemImage: String
+    private let isMember: @Sendable (Symbol) -> Bool
+    
+    public func isMember(_ symbol: Symbol) -> Bool {
+        isMember(symbol)
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(name)
     }
 }

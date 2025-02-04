@@ -201,9 +201,9 @@ public struct SymbolPicker: View {
             #endif
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: Self.gridDimension, maximum: Self.gridDimension))]) {
-                ForEach(symbols.filter {
-                    (categories == .all || !$0.categories.isDisjoint(with: categories))
-                    && (searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText))
+                ForEach(symbols.filter { symbol in
+                    categories.contains(where: { $0.isMember(symbol) })
+                    && (searchText.isEmpty || symbol.name.localizedCaseInsensitiveContains(searchText))
                 }) { thisSymbol in
                     Button {
                         symbol = thisSymbol.name
