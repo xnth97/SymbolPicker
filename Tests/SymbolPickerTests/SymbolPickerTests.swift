@@ -45,6 +45,14 @@ struct SymbolPickerTests {
         assert(symbols.contains { $0.name.contains("figure.walk") })
         assert(!symbols.contains { $0.name.contains("pencil") })
     }
+    
+    @Test("Test ability to add custom categories of symbols")
+    func testCustomCategories() {
+        let categories: [SymbolCategory] = [SymbolCategory("circles", systemImage: "circle", isMember: { $0.name.contains("circle") })]
+        let symbols = Symbols.shared.symbols.filter { symbol in categories.contains(where: { $0.isMember(symbol) } )}
+        assert(symbols.contains { $0.name == "pencil.circle" })
+        assert(!symbols.contains { $0.name == "pencil" })
+    }
 
     private func assertImage(systemName: String) {
         #if canImport(UIKit)
@@ -53,5 +61,4 @@ struct SymbolPickerTests {
         #expect(NSImage(systemSymbolName: systemName, accessibilityDescription: nil) != nil)
         #endif
     }
-
 }

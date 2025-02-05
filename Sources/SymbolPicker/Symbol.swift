@@ -21,6 +21,13 @@ public class Symbol: Identifiable {
         guard components.count > 0 else { fatalError("Invalid symbol line: \(line)") }
         
         self.name = String(components[0])
-        self.categories = Set(components.dropFirst().map { SymbolCategory(rawValue: String($0))! })
+        self.categories = Set(components.dropFirst().map(Self.parseCategory))
+    }
+    
+    private static func parseCategory(_ input: String.SubSequence) -> SymbolCategory {
+        guard let category = SymbolCategory.defaultCategory(from: String(input)) else {
+            fatalError("Could not find default category for \(input)")
+        }
+        return category
     }
 }
